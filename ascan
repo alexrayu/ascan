@@ -1,0 +1,192 @@
+#!/usr/bin/php
+
+<?php
+
+define('DAYS_RECENT', 7);
+
+print 'aScan Code Scanner, updated 10 May 2018.' . "\n\n";
+main();
+
+/**
+ * Main function.
+ */
+function main() {
+  search_delete_hostgator_suspected();
+  $extensions = ['php', 'inc', 'theme', 'module'];
+  $signatures = get_signatures();
+  printf("\rListing the files.");
+  $files = find_files($extensions);
+  printf("\rFound %s files to scan.", count($files) ?? 'no');
+  $scan_results = [];
+  $total = count($files);
+  $i = 0;
+  foreach ($files as $path) {
+    $i++;
+    print_progress('Scanning:', $i, $total);
+    $positives = scan_file($path, $signatures);
+    if (!empty($positives)) {
+      $scan_results[] = [
+        'path' => $path,
+        'positives' => implode(', ', $positives),
+      ];
+    }
+  }
+
+  if (!empty($scan_results)) {
+    $file_path = save_positives($scan_results);
+    printf("\rScanning complete. \n%s suspicious files found. \nReport saved to %s.", count($scan_results) ?? 'no', $file_path);
+  }
+  else {
+    printf("\rScanning complete. No threats found.");
+  }
+  print "\n\n";
+}
+
+/**
+ * Save results as a csv file.
+ *
+ * @param array $results
+ *   Ascan scan results.
+ *
+ * @return string
+ *   Saved file path.
+ */
+function save_positives(array $results) {
+  $file_path = getcwd() . '/suspicious.csv';
+  $file = fopen($file_path, "w");
+
+  $export = ['File', 'Matches'];
+  fputcsv($file, $export);
+  foreach ($results as $result) {
+    $export = [
+      str_replace(getcwd() . '/', '', $result['path']),
+      $result['positives'],
+    ];
+    fputcsv($file, $export);
+  }
+  fclose($file);
+
+  return $file_path;
+}
+
+/**
+ * Scan file for signatures.
+ *
+ * @param string $path
+ *   Path to file.
+ * @param array $signatures
+ *   Sought signatures.
+ *
+ * @return array
+ *   Array of results.
+ */
+function scan_file($path, array $signatures) {
+  $positives = FALSE;
+  $now = time();
+
+  if (file_exists($path)) {
+    $file_content = file_get_contents($path);
+    $positives = [];
+    if ($now - filemtime($path) < 3600 * 24 * DAYS_RECENT) {
+      $positives['recent'] = 'recent';
+    }
+    foreach ($signatures as $signature) {
+      if (strpos($file_content, $signature) !== FALSE) {
+        $positives[$signature] = $signature;
+      }
+    }
+  }
+
+  return $positives;
+}
+
+/**
+ * Search and delete all hostgator .suspected files.
+ */
+function search_delete_hostgator_suspected() {
+  $files = find_files(['suspected']);
+  foreach ($files as $path) {
+    unlink($path);
+  }
+
+  if (count($files)) {
+    print 'Found and deleted ' . count($files) . ' *.suspected files.';
+    print 'The fact that there were *.suspected files, means, that the site had likely been hacked.';
+  }
+}
+
+/**
+ * Search for files by extension.
+ *
+ * @param array $extensions
+ *   Extensions to scan for.
+ *
+ * @return array
+ *   Found files.
+ */
+function find_files(array $extensions = []) {
+  $directory = new RecursiveDirectoryIterator(getcwd());
+  $iterator = new RecursiveIteratorIterator($directory);
+  $files = [];
+
+  foreach ($extensions as $extension) {
+    $regex = new RegexIterator($iterator, '/^.+\.' . $extension . '$/i', RecursiveRegexIterator::GET_MATCH);
+    foreach ($regex as $item) {
+      $files[] = reset($item);
+    }
+  }
+
+  return $files;
+}
+
+/**
+ * Progress indicator.
+ */
+function print_progress($message, $cur, $max) {
+  printf("\r%s %6.0f%% (%s/%s)", $message, ($cur / $max) * 100, $cur, $max);
+}
+
+/**
+ * Returns array of suspicious signatures.
+ *
+ * @return array
+ *   Signatures.
+ */
+function get_signatures() {
+  return [
+    '$GLOBALS[$GLOBALS[\'',
+    '=$_COOKIE;',
+    '${"\x',
+    'global$',
+    '{eval($',
+    'eval(base64_decode',
+    ']=$',
+    ']]=$',
+    ';function',
+    'eval/*',
+    '{eval',
+    ')&&$',
+    '];$',
+    ']as$',
+    '$:',
+    '=strtolower(',
+    '=strtoupper(',
+    ');if',
+    'PCT4BA6ODSE',
+    'basename($_FILES',
+    'ioncube',
+    '$__=s(',
+    '(base64_decode("',
+    '(base64_decode(\'',
+    ',@gzuncompress(',
+    'create_function(""',
+    'create_function(\'\'',
+    'intval(__',
+    'eval("\n\$',
+    'authedmine',
+    'rxr',
+    '\x61',
+    ';eval($',
+    '<iframe',
+  ];
+}

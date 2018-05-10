@@ -16,7 +16,8 @@ function main() {
   $signatures = get_signatures();
   printf("\rListing the files.");
   $files = find_files($extensions);
-  printf("\rFound %s files to scan.", count($files) ?? 'no');
+  $count = count($files) > 0 ? count($files) : 'no';
+  printf("\rFound %s files to scan.", $count);
   $scan_results = [];
   $total = count($files);
   $i = 0;
@@ -34,7 +35,8 @@ function main() {
 
   if (!empty($scan_results)) {
     $file_path = save_positives($scan_results);
-    printf("\rScanning complete. \n%s suspicious files found. \nReport saved to %s.", count($scan_results) ?? 'no', $file_path);
+    $count = count($scan_results) > 0 ? count($scan_results) : 'no';
+    printf("\rScanning complete. \n%s suspicious files found. \nReport saved to %s.", $count, $file_path);
   }
   else {
     printf("\rScanning complete. No threats found.");

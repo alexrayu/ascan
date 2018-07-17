@@ -4,7 +4,7 @@
 
 define('DAYS_RECENT', 7);
 
-print 'aScan Code Scanner, updated 10 May 2018.' . "\n\n";
+print 'aScan Code Scanner, updated 17 July 2018.' . "\n\n";
 main();
 
 /**
@@ -187,8 +187,28 @@ function get_signatures() {
     'eval("\n\$',
     'authedmine',
     'rxr',
-    '\x61',
+    '\x',
     ';eval($',
     '<iframe',
+    '){$_',
+    ';}return',
+    ';}static',
+    'curl_init();curl_setopt',
+    '!@file_exists',
+    '){@mkdir(',
+    ';@file_put_contents',
+    '@unserialize(@',
+    '}else{',
+    ';private',
+    ';public',
+    '){$_',
+    ';for',
+    'chr(ord($_',
+    ';exit();',
+    '@$_SERVER',
+    'php                                                                           ',
+    '$__)',
+    ';return',
+    ');}function',
   ];
 }

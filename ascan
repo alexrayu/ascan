@@ -4,7 +4,7 @@
 
 define('DAYS_RECENT', 7);
 
-print 'aScan Code Scanner, updated 17 July 2018.' . "\n\n";
+print 'aScan Code Scanner, updated 11 March 2022.' . "\n\n";
 main();
 
 /**
@@ -187,16 +187,14 @@ function get_signatures() {
     'eval("\n\$',
     'authedmine',
     'rxr',
-    '\x',
     ';eval($',
-    '<iframe',
     '){$_',
     ';}return',
     ';}static',
     'curl_init();curl_setopt',
     '!@file_exists',
     '){@mkdir(',
-    ';@file_put_contents',
+    '@file_put_contents',
     '@unserialize(@',
     '}else{',
     ';private',
@@ -210,5 +208,12 @@ function get_signatures() {
     '$__)',
     ';return',
     ');}function',
+    ').chr(',
+    '$_GET[\'pumpdie\']',
+    '"m"."d"."5"',
+    '\'m\'.\'d\'.\'5\'',
+    'error_reporting(0)',
+    'ignore_user_abort(true)',
+    '@header(',
   ];
 }

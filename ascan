@@ -3,8 +3,9 @@
 <?php
 
 define('DAYS_RECENT', 7);
+define('LONG_LINE', 5000);
 
-print 'aScan Code Scanner, updated 11 March 2022.' . "\n\n";
+print 'aScan Code Scanner, updated 22 March 2022.' . "\n\n";
 main();
 
 /**
@@ -89,12 +90,24 @@ function scan_file($path, array $signatures) {
   if (file_exists($path)) {
     $file_content = file_get_contents($path);
     $positives = [];
+
+    // Check for new and modified files.
     if ($now - filemtime($path) < 3600 * 24 * DAYS_RECENT) {
-      $positives['recent'] = 'recent';
+      #$positives['recent'] = '!RECENT';
     }
+
+    // Scan for signatures.
     foreach ($signatures as $signature) {
       if (strpos($file_content, $signature) !== FALSE) {
         $positives[$signature] = $signature;
+      }
+    }
+
+    // Scan for long lines.
+    $lines = explode("\n", $file_content);
+    foreach ($lines as $line) {
+      if (strlen($line) > LONG_LINE) {
+        $positives[$signature] = '!LONG(' . strlen($line) . ')';
       }
     }
   }
@@ -206,7 +219,6 @@ function get_signatures() {
     '@$_SERVER',
     'php                                                                           ',
     '$__)',
-    ';return',
     ');}function',
     ').chr(',
     '$_GET[\'pumpdie\']',
@@ -215,5 +227,9 @@ function get_signatures() {
     'error_reporting(0)',
     'ignore_user_abort(true)',
     '@header(',
+    'window.location',
+    '@$',
+    'echo (@$',
+    '$ooo',
   ];
 }

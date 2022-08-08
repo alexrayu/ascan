@@ -88,7 +88,7 @@ function scan_file($path, array $signatures) {
   $now = time();
 
   if (file_exists($path)) {
-    $file_content = file_get_contents($path);
+    $file_content = strtolower(file_get_contents($path));
     $positives = [];
 
     // Check for new and modified files.
@@ -169,8 +169,8 @@ function print_progress($message, $cur, $max) {
  */
 function get_signatures() {
   return [
-    '$GLOBALS[$GLOBALS[\'',
-    '=$_COOKIE;',
+    '$globals[$globals[\'',
+    '=$_cookie;',
     '${"\x',
     'global$',
     '{eval($',
@@ -187,8 +187,7 @@ function get_signatures() {
     '=strtolower(',
     '=strtoupper(',
     ');if',
-    'PCT4BA6ODSE',
-    'basename($_FILES',
+    'basename($_files',
     'ioncube',
     '$__=s(',
     '(base64_decode("',
@@ -216,12 +215,12 @@ function get_signatures() {
     ';for',
     'chr(ord($_',
     ';exit();',
-    '@$_SERVER',
+    '@$_server',
     'php                                                                           ',
     '$__)',
     ');}function',
     ').chr(',
-    '$_GET[\'pumpdie\']',
+    '$_get[\'pumpdie\']',
     '"m"."d"."5"',
     '\'m\'.\'d\'.\'5\'',
     'error_reporting(0)',
@@ -233,5 +232,6 @@ function get_signatures() {
     '$ooo',
     '@ini_set(\'error',
     'greengoplatform',
+    'wpyii2',
   ];
 }

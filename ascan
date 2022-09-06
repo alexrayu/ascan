@@ -4,8 +4,12 @@
 
 define('DAYS_RECENT', 7);
 define('LONG_LINE', 5000);
+define('LONG_PATTERN', 30);
 
-print 'aScan Code Scanner, updated 22 March 2022.' . "\n\n";
+// Whether to apply lax or strict check rules. Lax rules are less reliable.
+define('USE_STRICT', TRUE);
+
+print 'aScan Code Scanner, updated 06 September 2022.' . "\n\n";
 main();
 
 /**
@@ -14,7 +18,13 @@ main();
 function main() {
   search_delete_hostgator_suspected();
   $extensions = ['php', 'inc', 'theme', 'module'];
-  $signatures = get_signatures();
+
+  // Load signatures depending on strictness.
+  $signatures = get_strict();
+  if (!USE_STRICT) {
+    $signatures += get_lax();
+  }
+
   printf("\rListing the files.");
   $files = find_files($extensions);
   $count = count($files) > 0 ? count($files) : 'no';
@@ -24,12 +34,21 @@ function main() {
   $i = 0;
   foreach ($files as $path) {
     $i++;
+    $action = '';
     print_progress('Scanning:', $i, $total);
     $positives = scan_file($path, $signatures);
     if (!empty($positives)) {
+
+      // Check if file can be deleted.
+      if (can_delete($path)) {
+        unlink($path);
+        $action = 'deleted';
+      }
+
       $scan_results[] = [
         'path' => $path,
-        'positives' => implode(', ', $positives),
+        'positives' => '"' . str_replace('"', '', implode(', ', $positives)) . '"',
+        'action' => $action,
       ];
     }
   }
@@ -46,6 +65,29 @@ function main() {
 }
 
 /**
+ * Checks whether the file can be deleted by name.
+ *
+ * @param string $path
+ *   Path to the file.
+ *
+ * @return bool
+ *   Operation result.
+ */
+function can_delete($path) {
+  $filename = strtolower(pathinfo($path)['filename']);
+  $supported_substrings = [
+    'content', 'index', 'wpyii2', 'radio'
+  ];
+  foreach ($supported_substrings as $substring) {
+    if (strpos($filename, $substring) !== FALSE) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
  * Save results as a csv file.
  *
  * @param array $results
@@ -58,12 +100,13 @@ function save_positives(array $results) {
   $file_path = getcwd() . '/suspicious.csv';
   $file = fopen($file_path, "w");
 
-  $export = ['File', 'Matches'];
+  $export = ['File', 'Matches', 'Action'];
   fputcsv($file, $export);
   foreach ($results as $result) {
     $export = [
       str_replace(getcwd() . '/', '', $result['path']),
       $result['positives'],
+      $result['action'],
     ];
     fputcsv($file, $export);
   }
@@ -99,15 +142,22 @@ function scan_file($path, array $signatures) {
     // Scan for signatures.
     foreach ($signatures as $signature) {
       if (strpos($file_content, $signature) !== FALSE) {
-        $positives[$signature] = $signature;
+        if (strlen($signature) >= LONG_PATTERN) {
+          '!LONG_PATTERN(' . strlen($line) . ')';
+        }
+        else {
+          $positives[$signature] = $signature;
+        }
       }
     }
 
     // Scan for long lines.
-    $lines = explode("\n", $file_content);
-    foreach ($lines as $line) {
-      if (strlen($line) > LONG_LINE) {
-        $positives[$signature] = '!LONG(' . strlen($line) . ')';
+    if (!USE_STRICT) {
+      $lines = explode("\n", $file_content);
+      foreach ($lines as $line) {
+        if (strlen($line) > LONG_LINE) {
+          $positives[$signature] = '!LONG_LINE(' . strlen($line) . ')';
+        }
       }
     }
   }
@@ -167,7 +217,42 @@ function print_progress($message, $cur, $max) {
  * @return array
  *   Signatures.
  */
-function get_signatures() {
+function get_lax() {
+  return [
+    ']=$',
+    ']]=$',
+    '=strtolower(',
+    '=strtoupper(',
+    ');if',
+    'basename($_files',
+    'ioncube',
+    '(base64_decode("',
+    '(base64_decode(\'',
+    '!@file_exists',
+    '@file_put_contents',
+    'error_reporting(0)',
+    'ignore_user_abort(true)',
+    '@header(',
+    'window.location',
+    '@$',
+    ';for',
+    ';exit();',
+    ').chr(',
+    ';public',
+    ';private',
+    'curl_init();curl_setopt',
+    '];$',
+    ';function',
+  ];
+}
+
+/**
+ * Returns array of proven signatures.
+ *
+ * @return array
+ *   Signatures.
+ */
+function get_strict() {
   return [
     '$globals[$globals[\'',
     '=$_cookie;',
@@ -175,63 +260,38 @@ function get_signatures() {
     'global$',
     '{eval($',
     'eval(base64_decode',
-    ']=$',
-    ']]=$',
-    ';function',
     'eval/*',
     '{eval',
     ')&&$',
-    '];$',
     ']as$',
     '$:',
-    '=strtolower(',
-    '=strtoupper(',
-    ');if',
-    'basename($_files',
-    'ioncube',
     '$__=s(',
-    '(base64_decode("',
-    '(base64_decode(\'',
     ',@gzuncompress(',
     'create_function(""',
     'create_function(\'\'',
     'intval(__',
     'eval("\n\$',
     'authedmine',
-    'rxr',
     ';eval($',
     '){$_',
     ';}return',
     ';}static',
-    'curl_init();curl_setopt',
-    '!@file_exists',
     '){@mkdir(',
-    '@file_put_contents',
     '@unserialize(@',
-    '}else{',
-    ';private',
-    ';public',
     '){$_',
-    ';for',
     'chr(ord($_',
-    ';exit();',
-    '@$_server',
     'php                                                                           ',
     '$__)',
     ');}function',
-    ').chr(',
     '$_get[\'pumpdie\']',
     '"m"."d"."5"',
     '\'m\'.\'d\'.\'5\'',
-    'error_reporting(0)',
-    'ignore_user_abort(true)',
-    '@header(',
-    'window.location',
-    '@$',
     'echo (@$',
     '$ooo',
+    '.$OO',
     '@ini_set(\'error',
     'greengoplatform',
     'wpyii2',
+    'gzinflate(base64_decode',
   ];
 }

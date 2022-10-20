@@ -2,14 +2,17 @@
 
 <?php
 
-define('DAYS_RECENT', 7);
+define('DAYS_RECENT', 3);
 define('LONG_LINE', 5000);
 define('LONG_PATTERN', 30);
 
 // Whether to apply lax or strict check rules. Lax rules are less reliable.
 define('USE_STRICT', FALSE);
 
-print 'aScan Code Scanner, updated 06 September 2022.' . "\n\n";
+// Whether to allow deleting the infected files. Works only is scrict mode.
+define('CAN_DELETE', FALSE);
+
+print 'aScan Code Scanner, updated 20 October 2022.' . "\n\n";
 main();
 
 /**
@@ -74,7 +77,7 @@ function main() {
  *   Operation result.
  */
 function can_delete($path) {
-  if (!USE_STRICT) {
+  if (!USE_STRICT || !CAN_DELETE) {
     return FALSE;
   }
   $filename = strtolower(pathinfo($path)['filename']);
@@ -141,7 +144,7 @@ function scan_file($path, array $signatures) {
 
     // Check for new and modified files.
     if ($now - filemtime($path) < 3600 * 24 * DAYS_RECENT) {
-      #$positives['recent'] = '!RECENT';
+      $positives['recent'] = '!RECENT';
     }
 
     // Scan for signatures.
@@ -248,6 +251,9 @@ function get_lax() {
     'curl_init();curl_setopt',
     '];$',
     ';function',
+    ';for($i=0;$i<strlen(',
+    ');}return $',
+    '";eval(',
   ];
 }
 

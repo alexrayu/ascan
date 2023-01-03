@@ -4,15 +4,14 @@
 
 define('DAYS_RECENT', 3);
 define('LONG_LINE', 5000);
-define('LONG_PATTERN', 30);
 
 // Whether to apply lax or strict check rules. Lax rules are less reliable.
-define('USE_STRICT', FALSE);
+define('USE_STRICT', TRUE);
 
 // Whether to allow deleting the infected files. Works only is scrict mode.
 define('CAN_DELETE', FALSE);
 
-print 'aScan Code Scanner, updated 20 October 2022.' . "\n\n";
+print 'aScan Code Scanner, updated 03 Jan 2023.' . "\n\n";
 main();
 
 /**
@@ -28,7 +27,7 @@ function main() {
     $signatures += get_lax();
   }
 
-  printf("\rListing the files.");
+  printf("\rListing files.");
   $files = find_files($extensions);
   $count = count($files) > 0 ? count($files) : 'no';
   printf("\rFound %s files to scan.", $count);
@@ -82,13 +81,11 @@ function can_delete($path) {
   }
   $filename = strtolower(pathinfo($path)['filename']);
   $supported_substrings = [
-    'content', 'index', 'wpyii2', 'radio', 'about',
+    'content', 'index', 'wpyii2', 'radio', 'about', '2index', 'wp-login', 'admin',
   ];
   foreach ($supported_substrings as $substring) {
     if (strpos($filename, $substring) !== FALSE) {
-      if (strpos($filename) !== 'index.php') {
-        return TRUE;
-      }
+      return TRUE;
     }
   }
 
@@ -143,19 +140,14 @@ function scan_file($path, array $signatures) {
     $positives = [];
 
     // Check for new and modified files.
-    if ($now - filemtime($path) < 3600 * 24 * DAYS_RECENT) {
+    if (!USE_STRICT && $now - filemtime($path) < 3600 * 24 * DAYS_RECENT) {
       $positives['recent'] = '!RECENT';
     }
 
     // Scan for signatures.
     foreach ($signatures as $signature) {
       if (strpos($file_content, $signature) !== FALSE) {
-        if (strlen($signature) >= LONG_PATTERN) {
-          '!LONG_PATTERN(' . strlen($line) . ')';
-        }
-        else {
-          $positives[$signature] = $signature;
-        }
+        $positives[$signature] = $signature;
       }
     }
 
@@ -254,6 +246,9 @@ function get_lax() {
     ';for($i=0;$i<strlen(',
     ');}return $',
     '";eval(',
+    '){@header(',
+    '=urldecode("%',
+    'SylVxy',
   ];
 }
 
@@ -273,13 +268,10 @@ function get_strict() {
     'eval(base64_decode',
     'eval/*',
     '{eval',
-    ')&&$',
     ']as$',
     '$:',
     '$__=s(',
     ',@gzuncompress(',
-    'create_function(""',
-    'create_function(\'\'',
     'intval(__',
     'eval("\n\$',
     'authedmine',
@@ -304,5 +296,6 @@ function get_strict() {
     'greengoplatform',
     'wpyii2',
     'gzinflate(base64_decode',
+    'cacokutow',
   ];
 }
